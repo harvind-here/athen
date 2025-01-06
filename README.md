@@ -5,10 +5,8 @@
 │   │   └── ... (React source files)
 │   └── /build
 │       └── ... (React build files)
-├── /backend
-│   ├── app.py
-│   └── ... (other Flask files)
-├── package.json
+├─app.py
+├── ... (other Flask files)
 ├── requirements.txt
 └── vercel.json
 ```
