@@ -294,7 +294,7 @@ def speech_to_text():
         audio.export(output_wav, format='wav')
 
         API_URL = "https://api-inference.huggingface.co/models/openai/whisper-large-v3"
-        headers = {"Authorization": "Bearer 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"}
+        headers = {"Authorization": "Bearer <HF token>"}
 
         def query(filename):
             with open(filename, "rb") as f:
