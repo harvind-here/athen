@@ -114,7 +114,6 @@ dmypy.json
 
 # Node.js
 frontend/node_modules/
-build/
 
 credentials.json
 token.json
