@@ -294,7 +294,7 @@ def speech_to_text():
         audio.export(output_wav, format='wav')
 
         API_URL = "https://api-inference.huggingface.co/models/openai/whisper-large-v3"
-        headers = {"Authorization": "Bearer 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"}
+        headers = {"Authorization": "Bearer {HUGGING_FACE_INFERENCEAPI}"}
 
         def query(filename):
             with open(filename, "rb") as f:
@@ -352,4 +352,5 @@ def clear_chat_history():
         return jsonify({'error': f'An error occurred while clearing chat history and reminders: {str(e)}'}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True, port=5000)
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0', debug=False, port=port)

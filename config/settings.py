@@ -17,6 +17,7 @@ GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 GOOGLE_CSE_ID = os.getenv('GOOGLE_CSE_ID')
 GOOGLE_CALENDAR_CREDENTIALS = os.getenv('GOOGLE_CALENDAR_CREDENTIALS')
 MONGODB_URI = os.getenv('MONGODB_URI')
+HUGGING_FACE_INFERENCEAPI = os.getenv('HUGGING_FACE_INFERENCEAPI')
 
 # Google Calendar Settings
 SCOPES = "https://www.googleapis.com/auth/calendar"
