@@ -23,7 +23,7 @@ from utils.function_tools import function_tools
 # Initialize Flask app
 app = Flask(__name__, static_folder=os.path.abspath("frontend/build"), static_url_path="")
 CORS(app)
-app.secret_key = os.urandom(24)
+# app.secret_key = os.urandom(24)
 
 # Initialize MongoDB
 mongodb = MongoDB(MONGODB_URI)
