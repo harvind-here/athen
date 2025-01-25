@@ -1,0 +1,330 @@
+:root {
+  --primary-color: #8e9092;
+  --secondary-color: #6e6d6d;
+  --background-color: #d8d7d7;
+  --text-color: #ffffff;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: var(--background-color);
+  background-image: 
+      radial-gradient(circle at 25% 25%, rgba(52, 152, 219, 0.2) 0%, transparent 40%),
+      radial-gradient(circle at 75% 75%, rgba(46, 204, 113, 0.2) 0%, transparent 40%);
+  overflow: hidden;
+}
+
+.app {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.chat-container {
+  position: relative;
+  width: 98%; /* Keep this wide */
+  max-width: 2000px; /* Increased from 1800px to allow for even wider containers */
+  height: 70vh; /* Reduced from 85vh to make it more rectangular */
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  margin: 0 auto;
+  aspect-ratio: 16 / 9; /* This will enforce a 16:9 aspect ratio, making it more rectangular */
+}
+
+.chat-container:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+.chat-header {
+  background-color: var(--primary-color);
+  color: var(--text-color);
+  padding: 15px;
+  text-align: center;
+  font-size: 2.2em;
+  font-weight: bold;
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  scroll-behavior: smooth;
+}
+
+.message {
+  max-width: 75%; /* Increased from 70% for slightly wider messages */
+  padding: 5px 15px;
+  margin-bottom: 10px;
+  border-radius: 18px;
+  word-wrap: break-word;
+  animation: fadeIn 0.5s ease;
+  overflow-x: auto;
+}
+
+.user { 
+  align-self: flex-end; 
+  background-color: var(--primary-color);
+  color: white;
+  margin-left: auto;
+  border-bottom-right-radius: 5px;
+}
+
+.ai { 
+  align-self: flex-start; 
+  background-color: var(--secondary-color);
+  color: white;
+  border-bottom-left-radius: 5px;
+}
+
+.input-area {
+  display: flex;
+  padding: 15px;
+  background-color: white;
+  border-top: 1px solid #e0e0e0;
+  align-items: center; /* Added for better alignment */
+}
+
+#userInput {
+  flex: 1;
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid #ccc; /* Added border for better visibility */
+  border-radius: 25px;
+  background-color: #f0f0f0;
+  transition: all 0.3s ease;
+  margin-right: 10px; /* Added margin for spacing */
+}
+
+#userInput:focus {
+  outline: none;
+  background-color: #ffffff;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 5px rgba(142, 144, 146, 0.5);
+}
+
+button {
+  padding: 12px 20px;
+  font-size: 16px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+  margin-left: 10px;
+}
+
+button:hover {
+  background-color: #34495e;
+  transform: scale(1.05);
+}
+
+button:active {
+  transform: scale(0.95);
+}
+
+.recording {
+  background-color: #c03a2b96;
+}
+
+.recording:hover {
+  background-color: #c03a2b;
+}
+
+.integration-toggle {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.integration-container {
+  position: absolute;
+  top: 60px;
+  right: 10px;
+  width: 200px;
+  background-color: var(--secondary-color);
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  display: none;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.integration-container button {
+  width: 90%;
+  padding: 10px;
+  margin-bottom: 10px;
+  background-color: white;
+  color: var(--secondary-color);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.integration-container button:hover {
+  background-color: #f0f0f0;
+}
+
+.mode-toggle-button {
+  background-color: var(--primary-color) !important;
+  color: white !important;
+}
+
+.mode-toggle-button:hover {
+  background-color: #34495e !important;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.mode-toggle {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+}
+
+.mode-button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.mode-icon {
+  margin-left: 10px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px; /* Added gap for spacing between buttons */
+}
+
+@media (max-width: 768px) {
+  .chat-container {
+    width: 99%; /* Increased from 98% to 99% for mobile */
+    height: auto; /* Changed from fixed height to auto */
+    aspect-ratio: 4 / 3; /* A slightly less wide ratio for mobile, but still rectangular */
+  }
+  
+  .input-area {
+    flex-direction: column; /* Changed to column layout for mobile */
+  }
+  
+  #userInput {
+    width: 100%;
+    margin-bottom: 10px;
+    margin-right: 0; /* Remove right margin on mobile */
+  }
+  
+  .action-buttons {
+    width: 100%;
+    justify-content: space-between; /* Spread buttons evenly */
+  }
+  
+  .action-buttons button {
+    flex: 1; /* Make buttons take equal width */
+    margin-left: 0; /* Remove left margin */
+  }
+}
+
+.call-mode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.record-button {
+  padding: 15px 30px;
+  font-size: 18px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.record-button.recording {
+  background-color: #c0392b;
+}
+
+.audio-animation {
+  margin-top: 20px;
+  height: 50px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.audio-waves {
+  width: 100px;
+  height: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.audio-waves::before,
+.audio-waves::after {
+  content: "";
+  background: var(--primary-color);
+  height: 100%;
+  width: 10px;
+  border-radius: 5px;
+  animation: wave 1s ease-in-out infinite;
+}
+
+.audio-waves::before {
+  animation-delay: 0.25s;
+}
+
+@keyframes wave {
+  0%, 100% {
+    height: 20%;
+  }
+  50% {
+    height: 100%;
+  }
+}

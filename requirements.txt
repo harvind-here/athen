@@ -1,0 +1,16 @@
+flask
+flask-cors
+python-dotenv
+groq
+requests
+beautifulsoup4
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
+pytz
+ffmpeg-python
+pymongo
+pymongo[srv]
+soundfile
+pydub
