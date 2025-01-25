@@ -14,3 +14,5 @@ pymongo
 pymongo[srv]
 soundfile
 pydub
+gunicorn==21.2.0
+gevent==23.9.1
