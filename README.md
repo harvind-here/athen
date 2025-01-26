@@ -1,4 +1,7 @@
+## ATHEN
 **A**ssistant **T**hat **H**elps for **E**veryday **N**eeds
+
+------------------------------------------------------------------------
 
 ```Project structure
 /project_root
