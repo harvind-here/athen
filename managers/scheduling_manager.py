@@ -66,7 +66,7 @@ class SchedulingManager:
             flow = Flow.from_client_secrets_file(
                 CREDENTIALS_FILE,
                 scopes=SCOPES,
-                redirect_uri="http://localhost:5000/oauth_callback"
+                redirect_uri=os.environ.get("GOOGLE_REDIRECT_URI")
             )
             flow.fetch_token(code=auth_code)
             creds = flow.credentials
