@@ -41,7 +41,7 @@ class SchedulingManager:
                     flow = Flow.from_client_secrets_file(
                         CREDENTIALS_FILE,
                         scopes=SCOPES,
-                        redirect_uri="http://localhost:5000/oauth_callback"
+                        redirect_uri=os.environ.get("GOOGLE_REDIRECT_URI")
                     )
                     auth_url, _ = flow.authorization_url(prompt='consent')
                     logger.info(f"Generated authorization URL: {auth_url}")
