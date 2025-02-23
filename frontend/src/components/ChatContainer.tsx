@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './ChatContainer.css';
+import './ChatContainerMobile.css';
 import Switch from "../components/ui/switch"; // Updated import path
 import { Label } from "../components/ui/label"; // Updated import path
 import WavEncoder from 'wav-encoder';

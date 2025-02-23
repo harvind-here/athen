@@ -1,0 +1,174 @@
+/* Mobile Styles */
+@media (max-width: 768px) {
+  .chat-container {
+    width: 98%; /* Slightly less than full width */
+    height: 98vh; /* Slightly less than full height */
+    max-width: 100%;
+    aspect-ratio: unset;
+    border-radius: 12px;
+    margin: 1vh auto; /* Center the container with small margin */
+    position: fixed; /* Fix the position */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transform: none; /* Remove transform */
+    background-color: rgba(255, 255, 255, 0.95); /* Slightly more opaque */
+    overflow: hidden; /* Prevent content from causing shifts */
+    -webkit-backface-visibility: hidden; /* Prevent rendering issues */
+    -moz-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-transform: translateZ(0); /* Force GPU acceleration */
+    -moz-transform: translateZ(0);
+    transform: translateZ(0);
+    display: flex;
+    flex-direction: column;
+  }
+
+  body {
+    overflow: hidden; /* Prevent body scrolling */
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+
+  .chat-header {
+    padding: 12px 16px;
+    font-size: 1.5em;
+    flex-shrink: 0;
+  }
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 16px;
+    padding-bottom: 80px; /* Add extra padding at bottom to prevent messages being hidden */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  }
+
+  .message {
+    max-width: 85%;
+    padding: 10px 15px;
+    font-size: 15px;
+    margin-bottom: 12px;
+  }
+
+  .input-area {
+    padding: 12px 16px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(255, 255, 255, 0.98);
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 64px; /* Fixed height for input area */
+  }
+
+  #userInput {
+    flex: 1;
+    padding: 12px 16px;
+    font-size: 15px;
+    border-radius: 20px;
+    margin-right: 8px;
+  }
+
+  .action-buttons {
+    display: flex;
+    align-items: center;
+  }
+
+  .action-buttons button {
+    min-width: 60px;
+    height: 40px;
+    padding: 8px 16px;
+    font-size: 15px;
+    border-radius: 20px;
+    background-color: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    outline: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .integration-container {
+    width: 180px;
+    top: 60px;
+    right: 12px;
+  }
+
+  .call-container {
+    padding: 20px;
+    height: calc(100% - 60px); /* Adjust for header */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .record-button {
+    width: 130px;
+    height: 130px;
+    font-size: 16px;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+  .chat-container {
+    width: 96%; /* Slightly narrower on very small screens */
+    height: 97vh;
+    margin: 1.5vh auto;
+    left: 2%; /* Explicit left positioning */
+    right: 2%; /* Explicit right positioning */
+  }
+
+  .chat-header {
+    font-size: 1.3em;
+    padding: 10px 14px;
+  }
+
+  .message {
+    max-width: 88%;
+    font-size: 14px;
+    padding: 8px 12px;
+  }
+
+  .input-area {
+    padding: 10px 14px;
+    height: 56px; /* Slightly smaller height for smaller screens */
+  }
+
+  #userInput {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+
+  .action-buttons button {
+    min-width: 50px;
+    height: 36px;
+    padding: 6px 12px;
+    font-size: 14px;
+  }
+
+  .integration-container {
+    width: 160px;
+    right: 8px;
+  }
+
+  .messages {
+    padding: 10px 14px;
+    padding-bottom: 70px; /* Slightly smaller padding for smaller screens */
+  }
+}
+
+/* iOS Safari specific styles */
+@supports (-webkit-touch-callout: none) {
+  .chat-container {
+    height: -webkit-fill-available;
+  }
+} 
