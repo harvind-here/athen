@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_from_directory, session, Response, make_response
+from flask import Flask, request, jsonify, send_from_directory, session, Response, make_response, redirect # Add redirect
 from flask_cors import CORS
 import os
 from groq import Groq
@@ -11,7 +11,7 @@ import base64
 import requests
 from datetime import date, datetime, timedelta
 from functools import wraps
-from google.oauth2.credentials import Credentials
+# Removed Credentials import as it's handled within AuthManager now
 import secrets
 
 # Allow OAuth2 to work with HTTP for local development
@@ -86,42 +86,76 @@ def login_required(f):
 def google_auth():
     try:
         # Generate and store a secure state token
+        # Check if already authenticated via token.json
+        existing_creds = auth_manager.get_credentials()
+        if existing_creds and existing_creds.valid:
+            logger.info("User already authenticated via token.json. No need for new auth URL.")
+            # Return a message indicating already authenticated, or maybe user info
+            user_info = auth_manager.get_user_info() # Get info using stored creds
+            # Ensure user is in session if needed for other parts of the app
+            if 'user_id' not in session and user_info:
+                 session['user_id'] = user_info.get('sub')
+                 session.permanent = True
+                 session.modified = True
+                 # Optionally store credentials dict in session too, though token.json is primary
+                 session['credentials'] = {
+                     'token': existing_creds.token,
+                     'refresh_token': existing_creds.refresh_token,
+                     'token_uri': existing_creds.token_uri,
+                     'client_id': existing_creds.client_id,
+                     'client_secret': existing_creds.client_secret,
+                     'scopes': existing_creds.scopes
+                 }
+
+            response = make_response(jsonify({"message": "Already authenticated", "user": user_info}))
+            # Save session if modified
+            if session.modified:
+                 app.session_interface.save_session(app, session, response)
+            return response
+
+        # If not authenticated via token.json, proceed with OAuth flow
         state = secrets.token_urlsafe(32)
-        
-        # Don't clear the entire session, just update the oauth state
         session['oauth_state'] = state
         session.permanent = True
         session.modified = True
-        
+
         authorization_url = auth_manager.get_authorization_url(state)
-        
-        # Create response with both cookie and session state
+
+        if not authorization_url:
+             # This case should ideally not happen if the initial check passed,
+             # but handle defensively. It might mean get_authorization_url itself
+             # found valid creds after the initial check.
+             logger.warning("get_authorization_url returned None unexpectedly after initial check.")
+             return jsonify({"message": "Already authenticated"}), 200
+
+        # Create response with auth URL
         response = make_response(jsonify({"authUrl": authorization_url}))
-        
-        # Set cookie with SameSite attribute
+
+        # Set state cookie
         response.set_cookie(
             'oauth_state',
             state,
             httponly=True,
             samesite='Lax',
-            secure=False,  # Set to True in production with HTTPS
-            max_age=1800,  # 30 minutes
+            secure=False, # Set to True in production with HTTPS
+            max_age=1800, # 30 minutes
             path='/',
-            domain=None  # Ensure cookie is set for the correct domain
+            domain=None
         )
-        
+
         # Force session save
         app.session_interface.save_session(app, session, response)
-        
-        # Log the state being set
+
         logger.info(f"Setting oauth_state in session and cookie: {state}")
         logger.info(f"Current session after setting state: {dict(session)}")
-        
+
         return response
-        
+
     except Exception as e:
         logger.error(f"Error in google_auth: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        logger.error(traceback.format_exc()) # Log full traceback
+        return jsonify({"error": "An internal error occurred during authentication setup."}), 500
+
 
 @app.route('/api/auth/google/callback')
 def google_auth_callback():
@@ -131,7 +165,7 @@ def google_auth_callback():
         cookie_state = request.cookies.get('oauth_state')
         received_state = request.args.get('state')
         auth_code = request.args.get('code')
-        
+
         # Detailed logging
         logger.info("OAuth Callback - State Verification:")
         logger.info(f"Session State: {session_state}")
@@ -141,63 +175,91 @@ def google_auth_callback():
         logger.info(f"Full Session Data: {dict(session)}")
         logger.info(f"All Cookies: {dict(request.cookies)}")
         logger.info(f"Full Request URL: {request.url}")
-        
+
         # Use any available state (session or cookie)
         stored_state = session_state or cookie_state
-        
-        # Even if state is not found, proceed if we have auth code
+
+        # Basic state validation (optional but recommended)
+        # if not received_state or received_state != stored_state:
+        #     logger.warning("OAuth state mismatch or missing.")
+        #     # Decide how to handle: maybe proceed cautiously or return error
+        #     # return "Authentication failed: State mismatch", 400
+
         if auth_code:
             # Get the full URL including query parameters
             authorization_response = request.url
+            # Ensure HTTPS if behind a proxy
             if request.headers.get('X-Forwarded-Proto', 'http') == 'https':
-                authorization_response = 'https://' + authorization_response.split('://', 1)[1]
-            
-            # Exchange code for tokens using the existing method
+                if not authorization_response.startswith('https://'):
+                     authorization_response = 'https://' + authorization_response.split('://', 1)[1]
+
+            # Exchange code for tokens using AuthManager
+            # This now saves to token.json internally
             credentials_dict = auth_manager.handle_oauth_callback(
-                authorization_response, 
-                stored_state or received_state
+                authorization_response,
+                stored_state or received_state # Pass the state used
             )
-            
+
             if not credentials_dict:
-                logger.error("Failed to get credentials from OAuth callback")
-                return "Authentication failed: Could not get credentials", 400
-                
-            # Store credentials in session
+                logger.error("Failed to get credentials from OAuth callback via AuthManager")
+                return "Authentication failed: Could not process credentials", 400
+
+            # Store credentials dict in session (optional, as token.json is primary)
             session["credentials"] = credentials_dict
-            
-            # Get user info using credentials
-            credentials = Credentials(**credentials_dict)
-            user_info = auth_manager.get_user_info(credentials)
-            
+
+            # Get user info using AuthManager (which uses stored/refreshed credentials)
+            try:
+                user_info = auth_manager.get_user_info() # No need to pass creds
+                if not user_info:
+                     raise ValueError("Failed to retrieve user info after authentication.")
+            except Exception as user_info_error:
+                 logger.error(f"Error getting user info after callback: {user_info_error}")
+                 return "Authentication succeeded but failed to retrieve user details.", 500
+
             # Create or update user in database
             user_data = {
-                "google_id": user_info["sub"],
-                "email": user_info["email"],
-                "name": user_info["name"],
+                "google_id": user_info.get("sub"), # Use .get for safety
+                "email": user_info.get("email"),
+                "name": user_info.get("name"),
                 "picture": user_info.get("picture"),
-                "is_guest": False
+                "is_guest": False,
+                # Add/update timestamps if your schema supports them
+                "last_login_at": datetime.utcnow()
             }
-            
-            mongodb.create_user(user_data)
-            session["user_id"] = user_info["sub"]
-            session.permanent = True
+            # Ensure google_id exists before proceeding
+            if not user_data["google_id"]:
+                 logger.error("User info retrieved but missing 'sub' (google_id).")
+                 return "Authentication failed: Invalid user information received.", 500
+
+            mongodb.create_user(user_data) # Assumes this handles updates too
+            session["user_id"] = user_data["google_id"]
+            session.permanent = True # Make session persistent
             session.modified = True
-            
-            # Create success response
+
+            # Create success response (HTML to close popup)
             response = auth_manager.create_success_response()
-            
-            # Set session cookie and save session
+
+            # Clean up OAuth state from session and cookie
+            session.pop('oauth_state', None)
+            response.delete_cookie('oauth_state', path='/')
+
+            # Save the session with user_id and potentially credentials
             app.session_interface.save_session(app, session, response)
-            
+
+            logger.info(f"Successfully authenticated user {user_data['email']} ({user_data['google_id']}).")
             return response
+
         else:
-            logger.error("No authorization code received")
-            return "Authentication failed: No authorization code received", 400
-            
+            error_description = request.args.get('error', 'No authorization code received')
+            logger.error(f"OAuth callback failed. Error: {error_description}")
+            return f"Authentication failed: {error_description}", 400
+
     except Exception as e:
-        logger.error(f"Error in Google OAuth callback: {str(e)}")
+        logger.error(f"Critical error in Google OAuth callback: {str(e)}")
         logger.error(traceback.format_exc())
-        return f"Authentication failed: {str(e)}", 400
+        # Generic error to user
+        return "An internal error occurred during authentication.", 500
+
 
 @app.route('/api/auth/login', methods=['POST'])
 def login():
@@ -218,8 +280,18 @@ def login():
 
 @app.route('/api/auth/logout', methods=['POST'])
 def logout():
+    # Clear the server-side session
     session.clear()
-    return jsonify({"message": "Logout successful"})
+    # Clear the persisted credentials file
+    deleted_token = auth_manager.clear_credentials_file()
+    if deleted_token:
+        logger.info("Logout successful and token.json deleted.")
+        return jsonify({"message": "Logout successful"})
+    else:
+        logger.warning("Logout successful but failed to delete token.json.")
+        # Still return success to the user, but log the issue
+        return jsonify({"message": "Logout successful, but encountered an issue clearing credentials file."})
+
 
 @app.route('/api/auth/session')
 def get_session():
@@ -255,7 +327,7 @@ def process_chat(user_input, user_id):
         "response": "Your direct response to the user's query or input. respond only to the latest user input and not to the previous conversation history or context."
     }}
 
-    The current date and time is {formatted_time}, and today is {day_of_week}. Use the current date and time for relative references and respond with dates and times in sentence format (example: 3rd May 2024) with AM/PM format only."""
+    The current date and time is {formatted_time}, and today is {day_of_week}. Use the current date and time for relative references and respond with dates and times in sentence format (example: 3rd May 2024) with AM/PM format only. And importantly if you have the required arguments to tool call proceed to tool call and DONT expect all optional arguments. AAsk followup only if the required arguments are not fulfilled"""
 
     messages = [
         {"role": "system", "content": system_message},
@@ -292,169 +364,283 @@ def process_chat(user_input, user_id):
                 tool_call = tool_calls[0]
                 function_name = tool_call.function.name
                 function_args = json.loads(tool_call.function.arguments)
-                
                 logger.debug(f"Function name: {function_name}")
                 logger.debug(f"Function args: {function_args}")
 
-                if function_name == "create_event":
-                    service, auth_url = scheduling_manager.get_google_calendar_service()
-                    if auth_url:
-                        final_response = "Please authenticate with Google Calendar first"
-                        return {
-                            'llm_resp': final_response,
-                            'auth_url': auth_url
-                        }
-                    
+                # --- Calendar Function Handling ---
+                if function_name in ["create_event", "get_upcoming_events", "delete_event"]: # Add delete_event if applicable
+                    # Get service object using the updated method, passing auth_manager
+                    service = scheduling_manager.get_google_calendar_service(auth_manager)
+
                     if not service:
-                        raise Exception("Failed to initialize Google Calendar service")
-                    
-                    event_details = function_args.get("event_details")
-                    if not event_details:
-                        raise ValueError("No event details provided")
-                    
-                    logger.debug(f"Creating event with details: {event_details}")
-                    result = scheduling_manager.create_event(service=service, event_details=event_details)
-                    
-                    if result and isinstance(result, str) and result.startswith("https://"):
-                        event_link = result
-                        final_response = f"I've created the event '{event_details['summary']}' for {event_details['start_time']} to {event_details['end_time']}."
-                    else:
-                        final_response = "I couldn't create the event. Please try again."
+                        # If service is None, authentication is needed.
+                        # Generate auth URL using AuthManager
+                        state = secrets.token_urlsafe(32) # Generate a fresh state
+                        session['oauth_state'] = state # Store state for callback validation
+                        session.modified = True
+                        auth_url = auth_manager.get_authorization_url(state)
 
-                elif function_name == "get_upcoming_events":
-                    service, auth_url = scheduling_manager.get_google_calendar_service()
-                    if auth_url:
-                        final_response = "Please authenticate with Google Calendar first"
-                        return {
-                            'llm_resp': final_response,
-                            'auth_url': auth_url
-                        }
-                    result = scheduling_manager.get_upcoming_events(service, function_args.get('max_results', 10))
-                    final_response = result
+                        if auth_url:
+                             logger.info("Authentication required for Google Calendar. Returning auth URL.")
+                             final_response = "I need your permission to access Google Calendar first. Please authenticate."
+                             # Return auth_url so frontend can trigger the flow
+                             return {
+                                 'llm_resp': final_response,
+                                 'auth_url': auth_url # Send URL to frontend
+                             }
+                        else:
+                             # This might happen if get_authorization_url finds valid creds
+                             # after get_google_calendar_service failed (unlikely but possible race)
+                             logger.error("Failed to get service but also failed to get auth URL.")
+                             final_response = "There was an issue accessing Google Calendar. Please try logging in again."
+                             return {'llm_resp': final_response}
 
+                    # --- If service is valid, proceed with the specific function ---
+                    if function_name == "create_event":
+                        event_details = function_args.get("event_details")
+                        if not event_details:
+                            final_response = "I need more details to create the event (like summary, start time, end time)."
+                        else:
+                            logger.debug(f"Creating event with details: {event_details}")
+                            result = scheduling_manager.create_event(service=service, event_details=event_details)
+                            # Check result type: link, error message, etc.
+                            if isinstance(result, str) and result.startswith("https://"):
+                                event_link = result
+                                final_response = f"OK. I've created the event: {event_details.get('summary', 'Untitled Event')}"
+                            elif isinstance(result, str): # Handle error messages from create_event
+                                final_response = result # Pass the error message back
+                            else:
+                                final_response = "I couldn't create the event. Please check the details and try again."
+
+                    elif function_name == "get_upcoming_events":
+                        max_results = function_args.get('max_results', 10)
+                        logger.debug(f"Getting up to {max_results} upcoming events.")
+                        result = scheduling_manager.get_upcoming_events(service, max_results)
+                        final_response = result # Pass the formatted list or error message
+
+                    # Add delete_event handling if needed
+                    # elif function_name == "delete_event":
+                    #     summary = function_args.get("summary")
+                    #     if not summary:
+                    #         final_response = "Please tell me the summary of the event you want to delete."
+                    #     else:
+                    #         deleted = scheduling_manager.delete_event(service, summary)
+                    #         final_response = f"OK. I've deleted the event '{summary}'." if deleted else f"Sorry, I couldn't find or delete the event '{summary}'."
+
+                # --- Other Function Handling (Reminders, Web Search) ---
                 elif function_name == "get_active_reminders":
-                    reminders = reminders_manager.get_active_reminders()
+                    # Pass user_id if reminders are user-specific
+                    reminders = reminders_manager.get_active_reminders(user_id=user_id) # Assuming method needs user_id
                     if reminders:
-                        final_response = "Here are your active reminders:\n" + "\n".join([f"- {r['reminder']}" for r in reminders])
+                        final_response = "Here are your active reminders:\n" + "\n".join([f"- {r['reminder']} (ID: {r.get('_id', 'N/A')})" for r in reminders]) # Include ID if helpful
                     else:
-                        final_response = "You don't have any active reminders."
+                        final_response = "You have no active reminders."
 
                 elif function_name == "add_reminder":
-                    reminders_manager.add_reminder(**function_args)
-                    final_response = f"Reminder '{function_args['reminder']}' added successfully."
+                    # Add user_id when adding reminder
+                    reminder_text = function_args.get('reminder')
+                    if reminder_text:
+                         reminders_manager.add_reminder(user_id=user_id, reminder=reminder_text)
+                         final_response = f"OK. I've added the reminder: '{reminder_text}'."
+                    else:
+                         final_response = "What reminder should I add?"
 
                 elif function_name == "complete_reminder":
-                    success = reminders_manager.complete_reminder(**function_args)
-                    final_response = f"Reminder '{function_args['reminder_text']}' marked as completed." if success else f"Reminder '{function_args['reminder_text']}' not found or already completed."
+                    # Pass user_id when completing
+                    reminder_text = function_args.get('reminder_text') # Or reminder_id if using IDs
+                    if reminder_text:
+                         success = reminders_manager.complete_reminder(user_id=user_id, reminder_text=reminder_text) # Assuming completion by text
+                         final_response = f"OK. I've marked '{reminder_text}' as completed." if success else f"Sorry, I couldn't find an active reminder matching '{reminder_text}'."
+                    else:
+                         final_response = "Which reminder should I mark as completed?"
+
 
                 elif function_name == "web_search":
-                    result = web_search(**function_args, groq_client=groq_client)
-                    if result and isinstance(result, str) and result.startswith("https://"):
-                        web_link = result
-                    final_response = result
+                    query = function_args.get("query")
+                    if query:
+                         result = web_search(query=query, groq_client=groq_client)
+                         # Check if result is a link or summary
+                         if isinstance(result, str) and result.startswith("http"):
+                             web_link = result # Assume it's a direct link
+                             final_response = f"Here's a link I found for '{query}': {web_link}"
+                         elif isinstance(result, str):
+                             final_response = result # Assume it's a summary
+                         else:
+                             final_response = f"Sorry, I couldn't find information for '{query}'."
+                    else:
+                         final_response = "What would you like me to search for?"
 
                 else:
-                    final_response = f"Unknown function: {function_name}"
+                    final_response = f"Sorry, I don't know how to handle the function: {function_name}"
 
             except Exception as e:
-                logger.error(f"Error executing function {function_name}: {e}")
-                final_response = f"Sorry, there was an error: {str(e)}"
+                logger.error(f"Error executing function '{function_name}': {e}")
+                logger.error(traceback.format_exc())
+                final_response = f"Sorry, I encountered an error while trying to {function_name.replace('_', ' ')}."
+        # --- Handling LLM's direct response (no tool call) ---
         else:
             try:
-                if content:
+                # Check if content is already a JSON string containing 'response'
+                if content and content.strip().startswith('{') and content.strip().endswith('}'):
                     parsed_content = json.loads(content)
                     if isinstance(parsed_content, dict) and "response" in parsed_content:
                         final_response = parsed_content["response"]
                     else:
+                        # If JSON but not the expected format, use the raw content
                         final_response = content
+                elif content:
+                    # If not JSON, use the content directly
+                    final_response = content
                 else:
-                    final_response = "I apologize, but I couldn't generate a proper response."
-            except json.JSONDecodeError:
-                final_response = content if content else "I apologize, but I couldn't generate a proper response."
+                    # Handle cases where the LLM might return empty content
+                    logger.warning("LLM returned empty content and no tool calls.")
+                    final_response = "I'm not sure how to respond to that. Can you please rephrase?"
 
+            except json.JSONDecodeError:
+                # If content is not valid JSON, treat it as a plain string response
+                final_response = content if content else "I apologize, I couldn't generate a response."
+            except Exception as parse_error:
+                logger.error(f"Error parsing LLM content: {parse_error}")
+                final_response = content # Fallback to raw content on other parsing errors
+
+        # --- Return the final processed response ---
+        # Note: auth_url is now potentially set within the calendar function handling
         return {
             'llm_resp': final_response,
-            'event_link': event_link,
-            'web_link': web_link,
-            'auth_url': auth_url
+            'event_link': event_link, # Will be None if not set
+            'web_link': web_link,     # Will be None if not set
+            'auth_url': auth_url      # Will be None if not set
         }
-    
+
     except Exception as e:
-        logger.error(f"Error in process_chat: {str(e)}")
+        logger.error(f"Critical error in process_chat: {str(e)}")
         logger.error(traceback.format_exc())
+        # Return a generic error message to the user
         return {
-            'llm_resp': f"An error occurred: {str(e)}",
+            'llm_resp': "Sorry, I encountered an internal error while processing your request.",
             'event_link': None,
             'web_link': None,
             'auth_url': None
         }
 
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def serve(path):
-    if path != "" and os.path.exists(app.static_folder + '/' + path):
-        return send_from_directory(app.static_folder, path)
-    else:
-        return send_from_directory(app.static_folder, 'index.html')
 
-@app.route('/oauth_callback')
-def oauth_callback():
-    auth_code = request.args.get('code')
-    if auth_code:
-        try:
-            service = scheduling_manager.handle_auth_callback(auth_code)
-            if service:
-                session['auth_pending'] = False
-                return "Authentication successful! You can close this window."
-            else:
-                return "Authentication failed. Please try again."
-        except Exception as e:
-            return "Authentication failed. Please try again."
+# Route for the root path: Always serve index.html. Frontend handles auth check and routing.
+@app.route('/')
+def serve_root():
+    logger.debug("Serving index.html for root path '/'.")
+    return send_from_directory(app.static_folder, 'index.html')
+
+
+# Route for other paths: Serve static files or fallback to index.html for SPA routing
+@app.route('/<path:path>')
+def serve_static_or_index(path):
+    static_folder = app.static_folder
+    file_path = os.path.join(static_folder, path)
+
+    # Check if the requested path corresponds to an existing static file
+    if os.path.exists(file_path) and not os.path.isdir(file_path):
+        # Serve the existing static file (e.g., main.js, styles.css)
+        return send_from_directory(static_folder, path)
     else:
-        return "Authentication failed. No authorization code received."
+        # If it's not an existing file, assume it's a frontend route
+        # and serve index.html to let React Router handle it.
+        logger.debug(f"Path '{path}' not found as static file, serving index.html for SPA routing.")
+        return send_from_directory(static_folder, 'index.html')
+
+
+# Remove the old /oauth_callback route as it's replaced by /api/auth/google/callback
+# @app.route('/oauth_callback')
+# def oauth_callback():
+#     ... (removed) ...
 
 @app.route('/api/auth_status')
 def auth_status():
+    # Check authentication status based on session and potentially token.json validity
     user_id = session.get("user_id")
-    if not user_id:
-        return jsonify({'authenticated': False})
-    
-    user = mongodb.get_user_by_id(user_id) or mongodb.get_user_by_google_id(user_id)
-    if not user:
-        return jsonify({'authenticated': False})
-    
+    google_authenticated = False
+    user_info = None
+
+    # Check if user is logged in via session
+    if user_id:
+        user = mongodb.get_user_by_id(user_id) or mongodb.get_user_by_google_id(user_id)
+        if user:
+             user_info = {
+                 "id": str(user.get("_id", user.get("google_id"))),
+                 "name": user.get("name"),
+                 "email": user.get("email"),
+                 "isGuest": user.get("is_guest", False)
+             }
+             # If user is not a guest, check Google auth status via AuthManager
+             if not user.get("is_guest", True):
+                  creds = auth_manager.get_credentials()
+                  google_authenticated = creds is not None and creds.valid
+
+    # If no user_id in session, still check if token.json exists and is valid
+    elif os.path.exists(TOKEN_FILE):
+         creds = auth_manager.get_credentials() # This will load/refresh if needed
+         if creds and creds.valid:
+             google_authenticated = True
+             # Try to get user info to populate response if possible
+             try:
+                 g_user_info = auth_manager.get_user_info()
+                 if g_user_info:
+                      # Attempt to find user in DB based on email/sub from token
+                      db_user = mongodb.get_user_by_google_id(g_user_info.get('sub')) or mongodb.get_user_by_email(g_user_info.get('email'))
+                      if db_user:
+                           user_info = {
+                               "id": str(db_user.get("_id", db_user.get("google_id"))),
+                               "name": db_user.get("name"),
+                               "email": db_user.get("email"),
+                               "isGuest": db_user.get("is_guest", False)
+                           }
+                           # Add user_id to session if found
+                           session['user_id'] = user_info['id']
+                           session.modified = True
+                      else:
+                           # If user not in DB but token valid, maybe just return basic info
+                           user_info = {
+                               "id": g_user_info.get('sub'),
+                               "name": g_user_info.get('name'),
+                               "email": g_user_info.get('email'),
+                               "isGuest": False # Assume not guest if Google authenticated
+                           }
+             except Exception as e:
+                  logger.warning(f"Error getting user info from valid token during auth_status check: {e}")
+
+
     return jsonify({
-        'authenticated': True,
-        'user': {
-            "id": str(user.get("_id", user.get("google_id"))),
-            "name": user.get("name"),
-            "email": user.get("email"),
-            "isGuest": user.get("is_guest", False)
-        }
+        'authenticated': bool(user_info), # Overall app auth status (session/guest)
+        'google_authenticated': google_authenticated, # Specific Google API auth status
+        'user': user_info # User details if available
     })
 
+
 @app.route('/api/chat', methods=['POST'])
-@login_required
+@login_required # Ensures session['user_id'] exists
 def chat():
     try:
         data = request.json
-        user_input = data['message']
+        user_input = data.get('message')
         is_speech = data.get('is_speech', False)
-        user_id = session.get('user_id')  # Get user_id from session
-        
-        logger.info(f"Received message: {user_input}, is_speech: {is_speech}")
+        user_id = session.get('user_id') # Get user_id from session (guaranteed by @login_required)
+
+        if not user_input:
+             return jsonify({'error': 'No message provided'}), 400
+
+        logger.info(f"User {user_id} | Input: '{user_input}' | Speech: {is_speech}")
 
         # Add user message to history
         history_manager.add_message(user_id, "user", user_input)
 
-        # Process the chat
+        # Process the chat using the updated logic
         resp = process_chat(user_input, user_id)
-        
+
         # Get the response components
-        final_response = resp.get('llm_resp', '')
+        final_response = resp.get('llm_resp', 'Sorry, I could not process that.')
         event_link = resp.get('event_link')
+        web_link = resp.get('web_link') # Added web_link handling
         auth_url = resp.get('auth_url')
-        
+
         # Add assistant response to history
         history_manager.add_message(user_id, "assistant", final_response)
 
@@ -463,33 +649,44 @@ def chat():
             'response': final_response
         }
 
-        # Convert response to speech if input was from speech
-        if is_speech:
-            try:
-                audio_data = text_to_speech(final_response)
-                if audio_data:
-                    response_data['audio'] = audio_data
-                    logger.info("Successfully generated audio response")
-                else:
-                    logger.error("Failed to generate audio response")
-            except Exception as e:
-                logger.error(f"Error in text-to-speech conversion: {str(e)}")
-        
-        # Add optional response components
+        # Add optional components if they exist
         if event_link:
             response_data['event_link'] = event_link
+        if web_link:
+            response_data['web_link'] = web_link
         if auth_url:
             response_data['auth_url'] = auth_url
+
+        # --- Text-to-Speech Conversion ---
+        if is_speech and final_response: # Only generate speech if there's text
+            try:
+                # Ensure the response isn't an error message asking for auth
+                if not auth_url:
+                     logger.info(f"Generating speech for response: '{final_response[:50]}...'")
+                     audio_data = text_to_speech(final_response)
+                     if audio_data:
+                         response_data['audio'] = audio_data # Add base64 audio data
+                         logger.info("Successfully generated audio response.")
+                     else:
+                         logger.error("Text-to-speech conversion returned no data.")
+                else:
+                     logger.info("Skipping speech generation for auth request.")
+
+            except Exception as tts_error:
+                logger.error(f"Error during text-to-speech conversion: {tts_error}")
+                # Don't fail the whole request, just log the TTS error
 
         return jsonify(response_data), 200
 
     except Exception as e:
-        logger.error(f"Error in chat endpoint: {str(e)}")
+        logger.error(f"Critical error in chat endpoint for user {user_id}: {str(e)}")
         logger.error(traceback.format_exc())
+        # Return a generic error response
         return jsonify({
-            'error': str(e),
+            'error': 'An internal server error occurred.',
             'response': 'I apologize, but I encountered an error processing your request.'
         }), 500
+
 
 @app.route('/api/speech-to-text', methods=['POST'])
 def speech_to_text():
