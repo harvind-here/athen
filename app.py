@@ -337,7 +337,7 @@ def process_chat(user_input, user_id):
     try:
         response = groq_client.chat.completions.create(
             messages=messages,
-            model="llama-3.3-70b-versatile",
+            model="meta-llama/llama-4-scout-17b-16e-instruct",
             temperature=0.5,
             max_tokens=1024,
             top_p=1,
