@@ -62,33 +62,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkSession();
   }, []);
 
-  const login = async (userId: string, isGuest: boolean, name?: string) => {
+  const login = (userId: string, isGuest: boolean, name?: string) => {
+    // Set the user state based on data already verified by LoginPage's checkAuthStatus
     const userData = { id: userId, isGuest, name };
-    
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id: userId,
-          isGuest: isGuest,
-          name: name
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Login failed');
-      }
-      
-      setUser(userData);
-    } catch (error) {
-      console.error('Error logging in:', error);
-      throw error;
-    }
+    setUser(userData);
+    // No need to call POST /api/auth/login here, session should be set by backend OAuth flow
+    console.log('AuthContext: User state set after login:', userData);
   };
 
   const logout = async () => {
@@ -166,4 +145,4 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}; 
+};

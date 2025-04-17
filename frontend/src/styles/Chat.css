@@ -20,4 +20,77 @@
 
 .auth-button:hover {
   background-color: #357abd;
-} 
+}
+
+.suggestion-prompts-container {
+  position: absolute;  /* Changed from fixed to absolute */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 600px;
+  z-index: 1000;
+  pointer-events: auto;  /* Added to ensure clickability */
+}
+
+.suggestion-prompt-box {
+  border: 2px solid transparent;
+  background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+  position: relative;
+  overflow: hidden;
+}
+
+.suggestion-prompt-box::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(90deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000);
+  background-size: 400%;
+  z-index: -1;
+  animation: animateShine 3s linear infinite;
+  opacity: 0.5;
+}
+
+.chat-header {
+  position: relative;
+  overflow: hidden;
+}
+
+.chat-header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transform: skewX(-25deg);
+  animation: headerShine 3s linear infinite;
+}
+
+#userInput:focus {
+  animation: rainbowBorder 3s linear;
+}
+
+.messages {
+  position: relative;  /* Added to create positioning context */
+}
+
+@keyframes animateShine {
+  0% { background-position: 0 0; }
+  100% { background-position: 400% 0; }
+}
+
+@keyframes headerShine {
+  0% { left: -100%; }
+  100% { left: 200%; }
+}
+
+@keyframes rainbowBorder {
+  0% { box-shadow: 0 0 0 2px rgba(255,0,0,0.5); }
+  20% { box-shadow: 0 0 0 2px rgba(255,165,0,0.5); }
+  40% { box-shadow: 0 0 0 2px rgba(255,255,0,0.5); }
+  60% { box-shadow: 0 0 0 2px rgba(0,255,0,0.5); }
+  80% { box-shadow: 0 0 0 2px rgba(0,0,255,0.5); }
+  100% { box-shadow: 0 0 0 2px rgba(255,0,0,0.5); }
+}

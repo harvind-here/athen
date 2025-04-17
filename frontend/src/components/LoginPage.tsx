@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FcGoogle } from 'react-icons/fc';
 import { FaUser } from 'react-icons/fa';
+import { motion } from 'framer-motion';
+import './LoginPage.css';
 
 interface LoginPageProps {
   onLogin: (userId: string, isGuest: boolean, name?: string) => void;
@@ -12,8 +14,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, error }) => {
   const [showGuestForm, setShowGuestForm] = useState(false);
   const [authWindow, setAuthWindow] = useState<Window | null>(null);
 
-  // Check auth status on mount and when auth window closes
-  const checkAuthStatus = async () => {
+  const checkAuthStatus = useCallback(async () => {
     try {
       const authStatusResponse = await fetch('/api/auth_status', {
         credentials: 'include',
@@ -33,14 +34,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, error }) => {
       console.error('Error checking auth status:', error);
       return false;
     }
-  };
+  }, [onLogin]);
 
-  // Check auth status on mount
   useEffect(() => {
     checkAuthStatus();
-  }, []);
+  }, [checkAuthStatus]);
 
-  // Monitor popup window
   useEffect(() => {
     if (!authWindow) return;
 
@@ -48,8 +47,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, error }) => {
       if (authWindow.closed) {
         clearInterval(checkPopup);
         setAuthWindow(null);
-        
-        // Wait a bit for the session to be properly set
+
         setTimeout(async () => {
           await checkAuthStatus();
         }, 1000);
@@ -57,35 +55,46 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, error }) => {
     }, 500);
 
     return () => clearInterval(checkPopup);
-  }, [authWindow]);
+  }, [authWindow, checkAuthStatus]);
 
   const handleGoogleLogin = async () => {
     try {
-      const isAuthenticated = await checkAuthStatus();
-      if (!isAuthenticated) {
-        const response = await fetch('/api/auth/google', {
-          credentials: 'include',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
-        });
-        const data = await response.json();
-        if (data.authUrl) {
-          const width = 500;
-          const height = 600;
-          const left = window.screenX + (window.outerWidth - width) / 2;
-          const top = window.screenY + (window.outerHeight - height) / 2;
-          const popup = window.open(
-            data.authUrl,
-            'Google Sign In',
-            `width=${width},height=${height},left=${left},top=${top},toolbar=0,location=0,menubar=0,status=0`
-          );
-          setAuthWindow(popup);
-        }
+      const response = await fetch('/api/auth/google', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.statusText}`);
       }
+
+      const data = await response.json();
+
+      if (data.authUrl) {
+        console.log("Authentication required, opening popup.");
+        const width = 500;
+        const height = 600;
+        const left = window.screenX + (window.outerWidth - width) / 2;
+        const top = window.screenY + (window.outerHeight - height) / 2;
+        const popup = window.open(
+          data.authUrl,
+          'Google Sign In',
+          `width=${width},height=${height},left=${left},top=${top},toolbar=0,location=0,menubar=0,status=0`
+        );
+        setAuthWindow(popup);
+      } else if (data.message === "Already authenticated" && data.user) {
+        console.log("Already authenticated on backend, logging in.");
+        onLogin(data.user.id, data.user.isGuest, data.user.name);
+      } else {
+        console.error('Unexpected response from /api/auth/google:', data);
+      }
+
     } catch (error) {
-      console.error('Error initiating Google login:', error);
+      console.error('Error during Google login process:', error);
     }
   };
 
@@ -98,38 +107,71 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, error }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md w-96">
-        <h1 className="text-2xl font-bold text-center mb-6">Welcome to Athen</h1>
-        
+    <div className="login-wrapper">
+    <div className="min-h-screen flex items-center justify-center p-4 overflow-hidden bg-gray-100 dark:bg-gray-900">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="login-card shadow-lg w-full max-w-md border"
+      >
+        <motion.h1
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+          className="text-3xl font-bold text-center mb-8"
+        >
+          Welcome to ATHEN
+        </motion.h1>
+
         {error && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="mb-6 p-3 rounded-lg text-sm login-error"
+          >
             {error}
-          </div>
+          </motion.div>
         )}
-        
+
         {!showGuestForm ? (
-          <div className="space-y-4">
-            <button
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="space-y-5"
+          >
+            <motion.button
+              whileHover={{ scale: 1.03, transition: { duration: 0.15 } }}
+              whileTap={{ scale: 0.98 }}
               onClick={handleGoogleLogin}
-              className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 rounded-lg px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+              className="login-button"
             >
-              <FcGoogle className="text-xl" />
+              <FcGoogle className="text-2xl" />
               Continue with Google
-            </button>
-            
-            <button
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.03, transition: { duration: 0.15 } }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => setShowGuestForm(true)}
-              className="w-full flex items-center justify-center gap-2 bg-gray-800 text-white rounded-lg px-4 py-2 hover:bg-gray-700 transition-colors"
+              className="login-button"
             >
               <FaUser />
               Continue as Guest
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
         ) : (
-          <form onSubmit={handleGuestLogin} className="space-y-4">
+          <motion.form
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+            onSubmit={handleGuestLogin}
+            className="space-y-5"
+          >
             <div>
-              <label htmlFor="guestName" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="guestName" className="block text-sm font-medium mb-1">
                 Enter your name
               </label>
               <input
@@ -137,31 +179,37 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, error }) => {
                 id="guestName"
                 value={guestName}
                 onChange={(e) => setGuestName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="login-input"
                 placeholder="Your name"
                 required
               />
             </div>
             
-            <button
+
+            <motion.button
+              whileHover={{ scale: 1.03, transition: { duration: 0.15 } }}
+              whileTap={{ scale: 0.98 }}
               type="submit"
-              className="w-full bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700 transition-colors"
+              className="login-button"
             >
               Continue
-            </button>
-            
-            <button
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.03, transition: { duration: 0.15 } }}
+              whileTap={{ scale: 0.98 }}
               type="button"
               onClick={() => setShowGuestForm(false)}
-              className="w-full text-gray-600 text-sm hover:text-gray-800"
+              className="w-full text-center text-sm hover:underline focus:outline-none"
             >
-              Back to login options
-            </button>
-          </form>
+              Back
+            </motion.button>
+          </motion.form>
         )}
-      </div>
+      </motion.div>
+    </div>
     </div>
   );
 };
 
-export default LoginPage; 
+export default LoginPage;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ChatContainer from './components/ChatContainer';
-import LoginPage from './components/LoginPage';
+import LoginPage from './components/LoginPage'; // Import the new LoginPage
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './App.css';
 

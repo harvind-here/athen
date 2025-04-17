@@ -1,297 +1,361 @@
-:root {
-  --primary-color: #8e9092;
-  --secondary-color: #6e6d6d;
-  --background-color: #d8d7d7;
-  --text-color: #ffffff;
-}
-
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background-color: var(--background-color);
-  background-image: 
-      radial-gradient(circle at 25% 25%, rgba(52, 152, 219, 0.2) 0%, transparent 40%),
-      radial-gradient(circle at 75% 75%, rgba(46, 204, 113, 0.2) 0%, transparent 40%);
-  overflow: hidden;
-}
-
-.app {
-  width: 100%;
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-}
+/* Removed duplicated :root variables */
+/* Removed duplicated body styles - will be in App.css or index.css */
+/* Removed .app styles - handled by .App in App.css */
 
 .chat-container {
   position: relative;
-  width: 98%; /* Keep this wide */
-  max-width: 2000px; /* Increased from 1800px to allow for even wider containers */
-  height: 70vh; /* Reduced from 85vh to make it more rectangular */
-  border-radius: 10px;
+  width: 98%;
+  max-width: 2000px;
+  height: 70vh; /* Keep specified height */
+  border-radius: 12px; /* Slightly larger radius */
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background-color: rgba(255, 255, 255, 0.8);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.85); /* Slightly less transparent */
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08); /* Softer shadow */
+  backdrop-filter: blur(12px); /* Slightly more blur */
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   margin: 0 auto;
-  aspect-ratio: 16 / 9; /* This will enforce a 16:9 aspect ratio, making it more rectangular */
+  aspect-ratio: 16 / 9; /* Keep specified aspect ratio */
+  border: 1px solid rgba(0, 0, 0, 0.05); /* Subtle border */
 }
 
 .chat-container:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+  transform: translateY(-4px); /* Slightly less lift */
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.1); /* Slightly larger hover shadow */
 }
 
 .chat-header {
   background-color: var(--primary-color);
   color: var(--text-color);
-  padding: 15px;
+  padding: 12px 20px; /* Adjusted padding */
   text-align: center;
-  font-size: 2.2em;
-  font-weight: bold;
+  font-size: 1.8em; /* Slightly smaller header */
+  font-weight: 600; /* Slightly less bold */
+  flex-shrink: 0; /* Prevent header from shrinking */
 }
 
 .messages {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: 20px 25px; /* Increased horizontal padding */
   scroll-behavior: smooth;
 }
 
+/* Style scrollbar for webkit browsers */
+.messages::-webkit-scrollbar {
+  width: 8px;
+}
+.messages::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+.messages::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+.messages::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+
 .message {
-  max-width: 75%; /* Increased from 70% for slightly wider messages */
-  padding: 5px 15px;
-  margin-bottom: 10px;
-  border-radius: 18px;
+  max-width: 75%;
+  padding: 10px 18px; /* Increased padding */
+  margin-bottom: 12px; /* Increased margin */
+  border-radius: 20px; /* More rounded */
   word-wrap: break-word;
-  animation: fadeIn 0.5s ease;
-  overflow-x: auto;
+  animation: fadeIn 0.4s ease-out; /* Slightly faster fade */
+  overflow-wrap: break-word; /* Ensure long words break */
+  line-height: 1.5; /* Improved line spacing */
+  /* overflow-x: auto; Removed, rely on word-wrap */
 }
 
-.user { 
-  align-self: flex-end; 
+.user {
+  align-self: flex-end;
   background-color: var(--primary-color);
-  color: white;
+  color: var(--text-color); /* Use variable */
   margin-left: auto;
-  border-bottom-right-radius: 5px;
+  border-bottom-right-radius: 6px; /* Consistent radius adjustment */
 }
 
-.ai { 
-  align-self: flex-start; 
+.ai {
+  align-self: flex-start;
   background-color: var(--secondary-color);
-  color: white;
-  border-bottom-left-radius: 5px;
+  color: var(--text-color); /* Use variable */
+  border-bottom-left-radius: 6px; /* Consistent radius adjustment */
 }
 
 .input-area {
   display: flex;
-  padding: 15px;
-  background-color: white;
-  border-top: 1px solid #e0e0e0;
-  align-items: center; /* Added for better alignment */
+  align-items: center; /* Vertically center items */
+  padding: 15px 20px; /* Adjusted padding */
+  background-color: rgba(255, 255, 255, 0.9); /* Slightly transparent */
+  border-top: 1px solid rgba(0, 0, 0, 0.08); /* Softer border */
+  flex-shrink: 0; /* Prevent input area from shrinking */
+  gap: 10px; /* Add gap between elements */
 }
 
 #userInput {
   flex: 1;
-  padding: 12px;
-  font-size: 16px;
-  border: 1px solid #ccc; /* Added border for better visibility */
-  border-radius: 25px;
-  background-color: #f0f0f0;
-  transition: all 0.3s ease;
-  margin-right: 10px; /* Added margin for spacing */
+  padding: 10px 18px; /* Adjusted padding */
+  font-size: 1rem; /* Use rem unit */
+  border: 1px solid #d0d0d0; /* Slightly darker border */
+  border-radius: 20px; /* Match message radius */
+  background-color: #f8f8f8; /* Slightly off-white */
+  transition: all 0.2s ease-in-out;
+  /* margin-right: 10px; Removed, using gap now */
+  line-height: 1.4;
 }
 
 #userInput:focus {
   outline: none;
   background-color: #ffffff;
   border-color: var(--primary-color);
-  box-shadow: 0 0 5px rgba(142, 144, 146, 0.5);
+  box-shadow: 0 0 0 3px rgba(142, 144, 146, 0.2); /* Focus ring */
 }
 
+/* General Button Styling (Apply to all buttons if possible) */
 button {
-  padding: 12px 20px;
-  font-size: 16px;
+  padding: 10px 18px; /* Adjusted padding */
+  font-size: 0.95rem; /* Use rem unit */
   background-color: var(--primary-color);
-  color: white;
+  color: var(--text-color); /* Use variable */
   border: none;
-  border-radius: 25px;
+  border-radius: 20px; /* Match input/message radius */
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.1s ease;
-  margin-left: 10px;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  /* margin-left: 10px; Removed, using gap in parent (.input-area, .action-buttons) */
+  font-weight: 500;
+  white-space: nowrap; /* Prevent text wrapping */
 }
 
 button:hover {
-  background-color: #34495e;
-  transform: scale(1.05);
+  background-color: var(--secondary-color); /* Use secondary color for hover */
+  transform: translateY(-1px); /* Subtle lift */
 }
 
 button:active {
-  transform: scale(0.95);
+  transform: translateY(0px); /* Reset lift on active */
+  filter: brightness(0.95); /* Slightly darken on active */
 }
 
-.recording {
-  background-color: #c03a2b96;
+/* Specific button overrides */
+.record-button.recording,
+.record-button.recording:hover { /* Ensure hover state is also red */
+  background-color: #e74c3c; /* Brighter red for recording */
+  transform: translateY(0px); /* No lift when recording */
+}
+.record-button.recording:active {
+  filter: brightness(0.9); /* Darken red on active */
 }
 
-.recording:hover {
-  background-color: #c03a2b;
-}
 
+/* Integration Toggle - Assuming this is part of ChatContainer */
 .integration-toggle {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  background-color: var(--primary-color);
-  color: white;
+  top: 15px; /* Align with header padding */
+  right: 15px;
+  background-color: rgba(255, 255, 255, 0.2); /* Subtle background */
+  color: var(--text-color);
   border: none;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  font-size: 20px;
+  width: 36px; /* Slightly smaller */
+  height: 36px;
+  font-size: 18px; /* Adjusted size */
   cursor: pointer;
   z-index: 10;
   display: flex;
   justify-content: center;
   align-items: center;
+  transition: background-color 0.2s ease;
+}
+.integration-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.3);
 }
 
+/* Integration Container - Assuming this is part of ChatContainer */
 .integration-container {
   position: absolute;
-  top: 60px;
-  right: 10px;
-  width: 200px;
-  background-color: var(--secondary-color);
-  border-radius: 10px;
-  padding: 15px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  display: none;
+  top: 60px; /* Position below toggle */
+  right: 15px;
+  width: 220px; /* Slightly wider */
+  background-color: #ffffff; /* White background */
+  border-radius: 8px; /* Standard radius */
+  padding: 10px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1); /* Standard shadow */
+  /* display: none; Should be controlled by component state */
   z-index: 5;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  gap: 8px; /* Gap between buttons */
 }
 
 .integration-container button {
-  width: 90%;
+  width: 100%;
   padding: 10px;
-  margin-bottom: 10px;
-  background-color: white;
-  color: var(--secondary-color);
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+  /* margin-bottom: 10px; Removed, using gap */
+  background-color: #f0f0f0; /* Light background */
+  color: #333; /* Darker text */
+  border: 1px solid #e0e0e0;
+  border-radius: 6px; /* Standard radius */
+  text-align: left; /* Align text left */
+  font-weight: 400; /* Normal weight */
 }
 
 .integration-container button:hover {
-  background-color: #f0f0f0;
+  background-color: #e5e5e5;
+  border-color: #ccc;
+  transform: none; /* No transform */
 }
 
-.mode-toggle-button {
-  background-color: var(--primary-color) !important;
-  color: white !important;
-}
-
-.mode-toggle-button:hover {
-  background-color: #34495e !important;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
+/* Mode Toggle - Assuming this is part of ChatContainer */
 .mode-toggle {
   position: absolute;
-  bottom: 20px;
-  right: 20px;
+  bottom: 15px; /* Align with input padding */
+  right: 15px;
+  z-index: 10; /* Ensure it's above messages */
 }
 
-.mode-button {
+.mode-button { /* Style for the button within mode-toggle */
   background-color: var(--primary-color);
-  color: white;
+  color: var(--text-color);
   border: none;
-  padding: 10px 20px;
-  border-radius: 20px;
+  padding: 8px 15px; /* Adjusted padding */
+  border-radius: 18px; /* Consistent radius */
   cursor: pointer;
-  font-size: 16px;
+  font-size: 0.9rem; /* Adjusted size */
   display: flex;
   align-items: center;
+  gap: 8px; /* Gap between text and icon */
+}
+.mode-button:hover {
+  background-color: var(--secondary-color);
+  transform: none; /* No transform needed */
 }
 
 .mode-icon {
-  margin-left: 10px;
+  /* margin-left: 10px; Removed, using gap */
+  font-size: 1.1em; /* Relative size */
 }
 
+/* Action Buttons container (Send, Record) */
 .action-buttons {
   display: flex;
-  gap: 10px; /* Added gap for spacing between buttons */
+  gap: 10px;
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); } /* Smaller translate */
+  to { opacity: 1; transform: translateY(0); }
+}
+
+
+/* --- Mobile Responsiveness --- */
 @media (max-width: 768px) {
   .chat-container {
-    width: 99%; /* Increased from 98% to 99% for mobile */
-    height: auto; /* Changed from fixed height to auto */
-    aspect-ratio: 4 / 3; /* A slightly less wide ratio for mobile, but still rectangular */
+    width: 100%; /* Full width */
+    height: 100vh; /* Full height */
+    max-width: none;
+    border-radius: 0; /* No radius on mobile */
+    border: none; /* No border */
+    box-shadow: none; /* No shadow */
+    aspect-ratio: unset; /* Remove aspect ratio */
   }
-  
-  .input-area {
-    flex-direction: column; /* Changed to column layout for mobile */
+
+  .chat-header {
+    padding: 10px 15px;
+    font-size: 1.5em;
   }
-  
-  #userInput {
-    width: 100%;
+
+  .messages {
+    padding: 15px; /* Reduced padding */
+  }
+
+  .message {
+    max-width: 85%; /* Allow slightly wider messages */
+    padding: 8px 15px;
     margin-bottom: 10px;
-    margin-right: 0; /* Remove right margin on mobile */
   }
-  
+
+  .input-area {
+    padding: 10px 15px;
+    /* Keep flex-direction: row; but allow wrapping if needed */
+    flex-wrap: wrap; /* Allow buttons to wrap if needed */
+  }
+
+  #userInput {
+    /* flex: 1; Keep flex grow */
+    min-width: 150px; /* Prevent input from becoming too small */
+    margin-bottom: 0; /* Remove bottom margin */
+    /* margin-right: 0; Removed */
+  }
+
   .action-buttons {
-    width: 100%;
-    justify-content: space-between; /* Spread buttons evenly */
+    /* width: 100%; Removed, let flex handle width */
+    /* justify-content: space-between; Removed */
+    flex-shrink: 0; /* Prevent buttons shrinking too much */
   }
-  
+
   .action-buttons button {
-    flex: 1; /* Make buttons take equal width */
-    margin-left: 0; /* Remove left margin */
+    /* flex: 1; Removed, let buttons size naturally */
+    padding: 10px 15px; /* Adjust padding */
+    /* margin-left: 0; Removed */
   }
+
+  .integration-toggle {
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+  .integration-container {
+    top: 55px;
+    right: 12px;
+  }
+  .mode-toggle {
+    bottom: 12px;
+    right: 12px;
+  }
+  .mode-button {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+  }
+
 }
 
+/* --- Call Mode Specific --- */
 .call-mode {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100%;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 .record-button {
-  padding: 15px 30px;
-  font-size: 18px;
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  border-radius: 30px;
+  padding: 12px 25px; /* Adjusted padding */
+  font-size: 1rem; /* Use rem */
+  /* background-color: var(--primary-color); Inherited */
+  /* color: white; Inherited */
+  /* border: none; Inherited */
+  border-radius: 25px; /* Specific radius for this button */
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease; /* Faster transition */
+  min-width: 150px; /* Ensure minimum width */
+  text-align: center;
 }
 
-.record-button.recording {
-  background-color: #c0392b;
-}
+/* Recording state handled above */
 
 .audio-animation {
-  margin-top: 20px;
-  height: 50px;
+  margin-top: 25px; /* Increased margin */
+  height: 60px; /* Increased height */
   width: 100%;
   display: flex;
   justify-content: center;
@@ -299,32 +363,242 @@ button:active {
 }
 
 .audio-waves {
-  width: 100px;
+  width: 80px; /* Adjusted width */
   height: 100%;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  justify-content: space-around; /* Better spacing */
+  align-items: flex-end; /* Align waves to bottom */
 }
 
-.audio-waves::before,
-.audio-waves::after {
-  content: "";
+.audio-waves span { /* Use spans instead of pseudo-elements for more control */
+  display: block;
   background: var(--primary-color);
-  height: 100%;
-  width: 10px;
-  border-radius: 5px;
-  animation: wave 1s ease-in-out infinite;
+  height: 10%; /* Start small */
+  width: 8px; /* Slightly narrower */
+  border-radius: 4px;
+  animation: wave 1.2s ease-in-out infinite;
 }
 
-.audio-waves::before {
-  animation-delay: 0.25s;
-}
+/* Stagger animation delays */
+.audio-waves span:nth-child(1) { animation-delay: 0s; }
+.audio-waves span:nth-child(2) { animation-delay: 0.2s; }
+.audio-waves span:nth-child(3) { animation-delay: 0.4s; }
+.audio-waves span:nth-child(4) { animation-delay: 0.6s; }
+.audio-waves span:nth-child(5) { animation-delay: 0.8s; }
+
+
+/* Removed pseudo-element styles */
 
 @keyframes wave {
-  0%, 100% {
-    height: 20%;
-  }
-  50% {
-    height: 100%;
-  }
+  0%, 100% { height: 10%; opacity: 0.5; }
+  50% { height: 100%; opacity: 1; }
 }
+
+/* --- Added Styles for Enhancements --- */
+
+/* Send Button Specific Style */
+.send-button {
+  padding: 10px 12px; /* Adjust padding for icon button */
+  border-radius: 50%; /* Make it circular */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0; /* Prevent shrinking */
+  /* Inherits base button styles */
+  background-color: var(--primary-color); /* Ensure background */
+  color: var(--text-color); /* Ensure text color */
+}
+.send-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+.send-button:disabled:hover {
+  background-color: #ccc; /* Keep disabled color on hover */
+  transform: none; /* No hover effect when disabled */
+}
+.send-button svg { /* Style the icon inside */
+  width: 16px; /* Adjusted size */
+  height: 16px;
+}
+
+/* Logout Button Specific Style */
+.logout-button {
+  /* Inherits integration container button styles */
+  color: var(--recording-color) !important; /* Use recording red for logout */
+  font-weight: 500;
+  display: flex; /* Align icon and text */
+  align-items: center;
+  justify-content: center; /* Center content */
+  gap: 8px; /* Space between icon and text */
+}
+.logout-button:hover {
+  background-color: rgba(231, 76, 60, 0.1) !important; /* Light red background on hover */
+  color: #a03023 !important; /* Darker red text on hover */
+  border-color: transparent !important; /* Remove border on hover for logout */
+}
+
+/* Event Preview Popup */
+.event-preview {
+  position: fixed; /* Use fixed to position relative to viewport */
+  background-color: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  z-index: 20; /* Ensure it's above other elements */
+  max-width: 250px;
+  border: 1px solid #eee;
+  font-size: 0.9rem;
+  color: var(--text-color-dark);
+  pointer-events: none; /* Prevent interaction with the preview itself */
+}
+.event-preview h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--secondary-color); /* Use theme color */
+}
+.event-preview p {
+  margin: 5px 0;
+}
+
+
+/* Auth Loading Overlay */
+.auth-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.85); /* Match container bg */
+  backdrop-filter: blur(5px); /* Add blur */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 30; /* Highest z-index */
+  border-radius: 12px; /* Match container radius */
+}
+.auth-loading-overlay p {
+  margin-top: 10px;
+  font-weight: 500;
+  color: var(--text-color-dark);
+}
+
+/* Refine Call Container */
+.call-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1; /* Ensure it takes available space */
+  padding: 20px;
+}
+
+/* Ensure loading animation is centered */
+.chat-loading-container {
+    display: flex;
+    justify-content: center;
+    padding: 10px;
+    position: absolute; /* Position it within the messages area */
+    bottom: 70px; /* Adjust based on input area height */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 5; /* Below integration menu */
+}
+
+/* Style for event link in message */
+.event-link {
+  color: #1a0dab; /* Google blue */
+  text-decoration: none; /* Remove underline */
+  margin-left: 8px;
+  font-size: 0.9em;
+  cursor: pointer;
+  font-weight: 500;
+  border-bottom: 1px dotted #1a0dab; /* Subtle underline */
+  transition: color 0.2s ease;
+}
+.event-link:hover {
+  color: #6753d8; /* Lighter purple on hover */
+  border-bottom-style: solid;
+}
+
+/* Header Controls Alignment */
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 15px; /* Space between toggles */
+  position: absolute; /* Position controls within header */
+  right: 20px; /* Match header padding */
+  top: 50%;
+  transform: translateY(-50%);
+}
+.chat-header {
+  position: relative; /* Needed for absolute positioning of controls */
+}
+
+/* Integration Toggle Icon Size */
+.integration-toggle svg {
+  width: 18px; /* Adjusted size */
+  height: 18px;
+}
+
+/* Ensure integration container buttons don't inherit global button hover */
+.integration-container button:hover {
+  background-color: #e5e5e5 !important; /* Override global hover */
+  border-color: #ccc !important;
+  transform: none !important; /* No transform */
+  filter: none !important; /* No brightness change */
+}
+.integration-container .logout-button:hover {
+  background-color: rgba(231, 76, 60, 0.1) !important;
+  color: #a03023 !important;
+  border-color: transparent !important; /* Remove border on hover for logout */
+}
+
+/* This file might contain more global or utility styles. */
+/* Ensure styles here also use the dark theme variables from index.css */
+
+/* Example: General link styling */
+a {
+  color: var(--link-color); /* Use dark theme link color */
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--link-hover-color); /* Dark theme link hover color */
+  text-decoration: underline;
+}
+
+/* Example: Button base styles (if applicable globally) */
+.button-base {
+  padding: 0.6rem 1.2rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  border: 1px solid transparent;
+  background-color: var(--primary-color);
+  color: var(--text-color);
+}
+
+.button-base:hover {
+  background-color: var(--secondary-color);
+}
+
+.button-base:disabled {
+  background-color: var(--secondary-color);
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Add any other global styles needed, ensuring they use dark theme variables */
+
+/* Ensure body styles are primarily in index.css */
+/* body { ... } */
+
+/* Ensure container styles are scoped or use appropriate variables */
+/* .container { ... } */
+
+/* Add specific overrides if necessary, but prefer using variables */

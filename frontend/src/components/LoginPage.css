@@ -1,0 +1,108 @@
+/* General styles for the card */
+.login-card {
+  width: 100%;
+  max-width: 500px;
+  height: auto;
+  max-height: 300px; /* Limit height for better appearance on small screens */
+  background: linear-gradient(145deg, var(--container-bg), var(--container-bg)); /* Dark gradient background */
+  padding: 2rem;
+  aspect-ratio: 4 / 3;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Slightly enhanced shadow for dark mode */
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+  background-color: var(--login-card-bg); /* Use dark card background */
+  color: var(--text-color); /* Use light text color */
+  border: 1px solid var(--border-color-medium); /* Add subtle border */
+  text-align: center; /* Center text like 'Welcome to Athen' */
+  margin: auto; /* Center the card horizontally if its parent is a block or flex container */
+}
+
+.login-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+
+/* Styles for the Google and Guest buttons */
+.login-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  width: 100%;
+  border: 1px solid var(--login-input-border); /* Use dark border */
+  background-color: var(--login-button-bg); /* Use dark button background */
+  color: var(--text-color); /* Use light text */
+  margin-top: 1rem; /* Add space between elements */
+}
+
+.login-button:hover {
+  background-color: var(--login-button-hover-bg); /* Dark hover background */
+  cursor: pointer;
+}
+
+/* Styles for the input field (if any, e.g., guest name) */
+.login-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--login-input-border); /* Use dark border */
+  background-color: var(--login-input-bg); /* Use dark input background */
+  color: var(--text-color); /* Use light text */
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  box-sizing: border-box; /* Include padding and border in the element's total width and height */
+  margin-top: 1rem; /* Add space */
+}
+
+.login-input:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    border-color: var(--primary-color); /* Highlight focus */
+    box-shadow: 0 0 0 2px var(--focus-ring-color);
+}
+
+
+/* Styles for the error message */
+.login-error {
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--login-input-border); /* Consistent border */
+  background-color: var(--login-error-bg); /* Dark error background */
+  color: var(--login-error-text); /* Dark error text */
+  margin-top: 1rem; /* Add space */
+  text-align: left; /* Align error text left */
+}
+
+
+/* Media query for responsiveness */
+@media (max-width: 640px) { /* Adjusted breakpoint */
+  .login-card {
+    padding: 1.5rem;
+    max-width: 70%; /* Allow card to take more width on small screens */
+  }
+
+  .login-button,
+  .login-input {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.9rem; /* Adjust font size slightly */
+  }
+}
+
+/* Add styles for the title if needed */
+.login-title {
+    font-size: 1.5rem; /* Example size */
+    font-weight: 600;
+    margin-bottom: 1.5rem; /* Space below title */
+    color: var(--text-color);
+}
+
+/* Add styles for spacing between buttons if needed */
+.login-button + .login-button {
+    margin-top: 0.8rem; /* Space between consecutive buttons */
+}

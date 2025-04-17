@@ -1,13 +1,68 @@
+/* Define global theme variables */
+:root {
+  /* Light Theme (kept for reference or future toggle) */
+  --primary-color-light: #8e9092;
+  --secondary-color-light: #6e6d6d;
+  --background-color-light: #f0f2f5;
+  --text-color-light: #ffffff;
+  --text-color-dark-light: #333333;
+  --container-bg-light: rgba(255, 255, 255, 0.85);
+  --input-bg-light: #f8f8f8;
+  --border-color-light-light: rgba(0, 0, 0, 0.08);
+  --border-color-medium-light: #d0d0d0;
+  --focus-ring-color-light: rgba(142, 144, 146, 0.2);
+  --recording-color-light: #e74c3c;
+
+  /* Dark Theme Variables */
+  --primary-color: #5a5c5e; /* Darker primary */
+  --secondary-color: #4a4a4a; /* Darker secondary */
+  --background-color: #1a202c; /* Dark background */
+  --text-color: #e2e8f0; /* Light text for dark backgrounds */
+  --text-color-dark: #cbd5e1; /* Slightly dimmer text for less emphasis */
+  --container-bg: rgba(45, 55, 72, 0.85); /* Dark container background */
+  --input-bg: #2d3748; /* Dark input background */
+  --border-color-light: rgba(255, 255, 255, 0.1); /* Light border for dark */
+  --border-color-medium: #4a5568; /* Medium border for dark */
+  --focus-ring-color: rgba(90, 92, 94, 0.3); /* Dark focus ring */
+  --recording-color: #e53e3e; /* Recording red (slightly adjusted if needed) */
+  --link-color: #63b3ed; /* Link color for dark */
+  --link-hover-color: #90cdf4; /* Link hover color */
+  --photon-gradient-start: #1a202c;
+  --photon-gradient-end: #2d3748;
+  --login-card-bg: #2d3748;
+  --login-button-bg: #4a5568;
+  --login-button-hover-bg: #718096;
+  --login-input-bg: #1a202c;
+  --login-input-border: #4a5568;
+  --login-error-bg: rgba(229, 62, 62, 0.2);
+  --login-error-text: #fc8181;
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  padding: 0; /* Ensure no default padding */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Consistent font */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--background-color); /* Use dark background */
+  /* Dark mode photon gradient */
+  background-image:
+      radial-gradient(circle at 10% 20%, rgba(203, 213, 225, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(160, 174, 192, 0.05) 0%, transparent 50%);
+  min-height: 100vh; /* Ensure body takes full height */
+  color: var(--text-color); /* Default dark mode text color */
+  line-height: 1.5; /* Default line height */
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+  background-color: rgba(0,0,0,0.05);
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+/* Basic reset for box-sizing */
+*, *::before, *::after {
+  box-sizing: border-box;
 }

@@ -310,7 +310,7 @@ def process_chat(user_input, user_id):
 
     formatted_context = "\n".join([f"{msg['role'].capitalize()}: {msg['content']}" for msg in recent_context])
 
-    system_message = f"""You are 'Athen', a virtual personal assistant created to engage and satisfy {USER_NAME}, the one who created you and you work for, by following the tasks they ask you to do. {USER_NAME} is {USER_AGE} years old and he is a {USER_OCCUPATION}. Their interests include {USER_INTERESTS}. You can perform tasks by selecting the most appropriate function. Your capabilities include accessing the user's Google Calendar (create, delete, list events), handling reminders (add, mark as completed, list), and now you can also perform web searches when explicitly asked to do so.
+    system_message = f"""You are 'Athen', a virtual personal assistant created to engage and assist the user by following the tasks they ask you to do. You can perform tasks by selecting the most appropriate function. Your capabilities include accessing the user's Google Calendar (create, delete, list events), handling reminders (add, mark as completed, list), and now you can also perform web searches when explicitly asked to do so.
 
     When the user asks you to search for something online or if you need to verify information, use the web_search function. Only use this function when explicitly asked or when you need to verify important information. Do not use it for every query.
 
@@ -699,13 +699,23 @@ def speech_to_text():
             audio_file.save(temp_file.name)
             temp_filename = temp_file.name
 
-        # Convert using pydub
+        # Convert using pydub with specific parameters for Whisper
         audio = AudioSegment.from_file(temp_filename)
-        output_wav = tempfile.NamedTemporaryFile(delete=False, suffix='.wav').name
-        audio = audio.set_frame_rate(16000)  # Set sample rate to 16kHz
+        audio = audio.set_frame_rate(16000)  # Whisper expects 16kHz
         audio = audio.set_channels(1)        # Convert to mono
         audio = audio.set_sample_width(2)    # Set to 16-bit
-        audio.export(output_wav, format='wav')
+
+        # Export with explicit codec and bitrate settings
+        output_wav = tempfile.NamedTemporaryFile(delete=False, suffix='.wav').name
+        audio.export(
+            output_wav,
+            format='wav',
+            parameters=[
+                "-ac", "1",          # Mono
+                "-ar", "16000",      # 16kHz
+                "-sample_fmt", "s16"  # 16-bit
+            ]
+        )
 
         API_URL = "https://api-inference.huggingface.co/models/openai/whisper-large-v3"
         hf_token = os.environ.get('HUGGING_FACE_INFERENCEAPI')
@@ -715,18 +725,19 @@ def speech_to_text():
         print("Using Hugging Face token")
         
         headers = {
-            "Authorization": f"Bearer {hf_token}",
-            "Content-Type": "audio/wav"
+            "Authorization": f"Bearer {hf_token}"
         }
 
         def query(filename):
             with open(filename, "rb") as f:
                 data = f.read()
-            response = requests.post(API_URL, headers=headers, data=data)
+            response = requests.post(
+                API_URL,
+                headers=headers,
+                data=data
+            )
             print("Response status code:", response.status_code)
             print("Response headers:", response.headers)
-            if response.status_code == 401:
-                raise ValueError("Unauthorized: Please check your Hugging Face API token")
             return response.json()
 
         output = query(output_wav)

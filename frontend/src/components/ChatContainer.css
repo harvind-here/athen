@@ -337,6 +337,108 @@
 }
 
 /* Remove old loading animation styles */
+
+/* Dark translucent overlay for suggestions */
+.messages {
+  position: relative;
+  height: 100%;
+}
+
+.suggestion-prompts-container {
+  position: absolute;
+  top: 20%;
+  left: 30%;
+  transform: translate(-20%, -50%);
+  width: 90%;
+  max-width: 600px;
+  background: rgba(23, 25, 35, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 20px;
+  padding: 2.5rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  z-index: 10;
+}
+
+.suggestion-prompts-title {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 1rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.suggestion-prompt-box {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  padding: 1.2rem 1.8rem;
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1rem;
+  line-height: 1.5;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+}
+
+.suggestion-prompt-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.05)
+  );
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.suggestion-prompt-box:hover {
+  transform: translateY(-2px) scale(1.02);
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2),
+              0 0 0 1px rgba(255, 255, 255, 0.15);
+}
+
+.suggestion-prompt-box:hover::before {
+  opacity: 1;
+}
+
+.suggestion-prompt-box:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+@media (max-width: 768px) {
+  .suggestion-prompts-container {
+    width: 95%;
+    padding: 1.5rem;
+  }
+  
+  .suggestion-prompt-box {
+    padding: 1rem 1.4rem;
+    font-size: 0.95rem;
+  }
+  
+  .suggestion-prompts-title {
+    font-size: 1.25rem;
+  }
+}
+
 .loading-container,
 .loading-animation,
 .dot {
