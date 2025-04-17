@@ -24,10 +24,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isAuthenticated = !!user;
 
   useEffect(() => {
-    // Check for existing session
     const checkSession = async () => {
       try {
-        // First check if there's a Google OAuth session
         const authStatusResponse = await fetch('/api/auth_status', {
           credentials: 'include',
           headers: {
@@ -38,7 +36,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const authStatusData = await authStatusResponse.json();
 
         if (authStatusData.authenticated) {
-          // If authenticated with Google, get the session data
           const sessionResponse = await fetch('/api/auth/session', {
             credentials: 'include',
             headers: {
@@ -51,16 +48,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (sessionData.user) {
             setUser(sessionData.user);
           }
+        } else {
+          setUser(null);
         }
       } catch (error) {
         console.error('Error checking session:', error);
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
     };
 
     checkSession();
-  }, []);
+  }, [window.location.pathname]); // Re-run checkSession on route change or refresh
 
   const login = (userId: string, isGuest: boolean, name?: string) => {
     // Set the user state based on data already verified by LoginPage's checkAuthStatus
