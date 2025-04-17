@@ -124,6 +124,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               clearInterval(checkAuth);
             }
           }, 1000);
+        } else {
+          console.error('Google sign in window was not opened');
         }
       }
     } catch (error) {

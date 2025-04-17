@@ -78,6 +78,7 @@ scheduling_manager = SchedulingManager()
 auth_manager = AuthManager(GOOGLE_CLIENT_CONFIG)
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 def login_required(f):
     @wraps(f)
@@ -560,13 +561,16 @@ def serve_static_or_index(path):
 def auth_status():
     try:
         logger.debug("Received request to /api/auth_status")
+        logger.debug(f"Session data: {dict(session)}")
+        logger.debug(f"Request cookies: {request.cookies}")
         # Check authentication status based on session and potentially token.json validity
         user_id = session.get("user_id")
         google_authenticated = False
         user_info = None
         logger.debug(f"User ID from session: {user_id}")
-    except:
-        pass
+    except Exception as e:
+        logger.error(f"Error in auth_status: {str(e)}")
+        logger.error(traceback.format_exc())
     # Check if user is logged in via session
     if user_id:
         user = mongodb.get_user_by_id(user_id) or mongodb.get_user_by_google_id(user_id)

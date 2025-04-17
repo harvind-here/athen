@@ -26,8 +26,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, error }) => {
       const authStatusData = await authStatusResponse.json();
 
       if (authStatusData.authenticated && authStatusData.user) {
+        console.log('User is authenticated:', authStatusData.user);
         onLogin(authStatusData.user.id, authStatusData.user.isGuest, authStatusData.user.name);
         return true;
+      } else {
+        console.log('User is not authenticated');
       }
       return false;
     } catch (error) {
@@ -37,6 +40,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, error }) => {
   }, [onLogin]);
 
   useEffect(() => {
+    console.log('Checking auth status on component mount');
     checkAuthStatus();
   }, [checkAuthStatus]);
 
