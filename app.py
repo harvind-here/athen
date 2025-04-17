@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_from_directory, session, Response, make_response, redirect # Add redirect
+from flask import Flask, request, jsonify, send_from_directory, session, Response, make_response, redirect
 from flask_cors import CORS
 import os
 from groq import Groq
@@ -11,7 +11,6 @@ import base64
 import requests
 from datetime import date, datetime, timedelta
 from functools import wraps
-# Removed Credentials import as it's handled within AuthManager now
 import secrets
 
 # Allow OAuth2 to work with HTTP for local development
@@ -27,8 +26,10 @@ from services.web_service import web_search
 from services.speech_service import text_to_speech
 from utils.function_tools import function_tools
 
-# Initialize Flask app with session configuration
-app = Flask(__name__, static_folder=os.path.abspath("frontend/build"), static_url_path="")
+# Initialize Flask app with absolute path to frontend build directory
+app = Flask(__name__, 
+    static_folder=os.path.abspath("frontend/build"),
+    static_url_path="")
 
 # Set the secret key for session management
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', secrets.token_hex(32))
@@ -534,24 +535,16 @@ def serve_root():
 # Route for other paths: Serve static files or fallback to index.html for SPA routing
 @app.route('/<path:path>')
 def serve_static_or_index(path):
-    static_folder = app.static_folder
-    file_path = os.path.join(static_folder, path)
+    try:
+        # First try to serve as a static file
+        if os.path.exists(os.path.join(app.static_folder, path)):
+            return send_from_directory(app.static_folder, path)
+        # If not found, return index.html for client-side routing
+        return send_from_directory(app.static_folder, 'index.html')
+    except Exception as e:
+        logger.error(f"Error serving path {path}: {str(e)}")
+        return send_from_directory(app.static_folder, 'index.html')
 
-    # Check if the requested path corresponds to an existing static file
-    if os.path.exists(file_path) and not os.path.isdir(file_path):
-        # Serve the existing static file (e.g., main.js, styles.css)
-        return send_from_directory(static_folder, path)
-    else:
-        # If it's not an existing file, assume it's a frontend route
-        # and serve index.html to let React Router handle it.
-        logger.debug(f"Path '{path}' not found as static file, serving index.html for SPA routing.")
-        return send_from_directory(static_folder, 'index.html')
-
-
-# Remove the old /oauth_callback route as it's replaced by /api/auth/google/callback
-# @app.route('/oauth_callback')
-# def oauth_callback():
-#     ... (removed) ...
 
 @app.route('/api/auth_status')
 def auth_status():
