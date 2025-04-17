@@ -8,7 +8,6 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-build/
 !frontend/build/  # Exception for frontend build
 develop-eggs/
 dist/
