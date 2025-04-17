@@ -54,7 +54,12 @@ Session(app)
 # Configure CORS with credentials support
 CORS(app, supports_credentials=True, resources={
     r"/api/*": {
-        "origins": ["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5000"],
+        "origins": [
+            "http://localhost:3000", 
+            "http://127.0.0.1:3000", 
+            "http://localhost:5000",
+            "https://athen.onrender.com"  # Add the deployed website's origin
+        ],
         "methods": ["GET", "POST", "OPTIONS"],
         "allow_headers": ["Content-Type", "X-User-ID", "Accept", "Cookie"],
         "expose_headers": ["Content-Type", "X-User-ID", "Set-Cookie"],
@@ -536,10 +541,15 @@ def serve_root():
 @app.route('/<path:path>')
 def serve_static_or_index(path):
     try:
+        logger.debug(f"Request received for path: {path}")
         # First try to serve as a static file
-        if os.path.exists(os.path.join(app.static_folder, path)):
+        file_path = os.path.join(app.static_folder, path)
+        logger.debug(f"Checking if file exists: {file_path}")
+        if os.path.exists(file_path):
+            logger.debug(f"Serving static file: {file_path}")
             return send_from_directory(app.static_folder, path)
         # If not found, return index.html for client-side routing
+        logger.debug(f"File not found, serving index.html instead")
         return send_from_directory(app.static_folder, 'index.html')
     except Exception as e:
         logger.error(f"Error serving path {path}: {str(e)}")
@@ -548,11 +558,15 @@ def serve_static_or_index(path):
 
 @app.route('/api/auth_status')
 def auth_status():
-    # Check authentication status based on session and potentially token.json validity
-    user_id = session.get("user_id")
-    google_authenticated = False
-    user_info = None
-
+    try:
+        logger.debug("Received request to /api/auth_status")
+        # Check authentication status based on session and potentially token.json validity
+        user_id = session.get("user_id")
+        google_authenticated = False
+        user_info = None
+        logger.debug(f"User ID from session: {user_id}")
+    except:
+        pass
     # Check if user is logged in via session
     if user_id:
         user = mongodb.get_user_by_id(user_id) or mongodb.get_user_by_google_id(user_id)
