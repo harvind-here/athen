@@ -116,4 +116,5 @@ dmypy.json
 frontend/node_modules/
 
 credentials.json
-token.json
+token_login.json
+token_calendar.json

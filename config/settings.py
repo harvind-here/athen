@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 import os
+import json
 
 load_dotenv()
 
@@ -20,18 +21,8 @@ MONGODB_URI = os.getenv('MONGODB_URI')
 HUGGING_FACE_INFERENCEAPI = os.getenv('HUGGING_FACE_INFERENCEAPI')
 
 # Google OAuth configuration
-GOOGLE_CLIENT_CONFIG = {
-    "web": {
-        "client_id": os.environ.get("GOOGLE_CLIENT_ID"),
-        "project_id": os.environ.get("GOOGLE_PROJECT_ID"),
-        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-        "token_uri": "https://oauth2.googleapis.com/token",
-        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-        "client_secret": os.environ.get("GOOGLE_CLIENT_SECRET"),
-        "redirect_uris": [os.environ.get("GOOGLE_REDIRECT_URI")],
-        "javascript_origins": [os.environ.get("FRONTEND_URL")]
-    }
-}
+with open(GOOGLE_CALENDAR_CREDENTIALS, 'r') as f:
+    GOOGLE_CLIENT_CONFIG = json.load(f)
 
 # Google Calendar Settings
 SCOPES = [
@@ -41,4 +32,4 @@ SCOPES = [
     "https://www.googleapis.com/auth/calendar"
 ]
 TOKEN_FILE = "token.json"
-CREDENTIALS_FILE = "credentials.json" 
+CREDENTIALS_FILE = "credentials.json"

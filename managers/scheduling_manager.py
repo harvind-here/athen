@@ -5,7 +5,7 @@ import re # Add re import
 from datetime import datetime
 import datetime as dt
 # Credentials might still be needed for type hinting if used, but not for logic
-# from google.oauth2.credentials import Credentials
+from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 import logging
@@ -23,9 +23,14 @@ class SchedulingManager:
         Does NOT initiate authentication flow.
         """
         try:
-            creds = auth_manager.get_credentials() # Get credentials from AuthManager
+            creds_info = auth_manager.get_calendar_credentials()
 
-            if creds and creds.valid:
+            if creds_info:
+                # Add client_id and client_secret from the auth_manager's config
+                creds_info['client_id'] = auth_manager.google_client_config['web']['client_id']
+                creds_info['client_secret'] = auth_manager.google_client_config['web']['client_secret']
+                
+                creds = Credentials.from_authorized_user_info(creds_info)
                 service = build("calendar", "v3", credentials=creds)
                 logger.info("Successfully built Google Calendar service.")
                 return service

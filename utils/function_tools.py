@@ -5,9 +5,12 @@ function_tools = [
         "parameters": {
             "type": "object",
             "properties": {
-                "max_results": {"type": "integer"}
-            },
-            "required": ["max_results"]
+                "max_results": {
+                    "type": "integer",
+                    "description": "The maximum number of upcoming events to return.",
+                    "default": 5
+                }
+            }
         }
     },
     {
@@ -85,4 +88,4 @@ function_tools = [
             "required": ["query"]
         }
     }
-] 
+]

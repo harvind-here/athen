@@ -3,7 +3,7 @@ import './ChatContainer.css';
 import './ChatContainerMobile.css';
 import Switch from "../components/ui/switch"; // Updated import path
 import WavEncoder from 'wav-encoder';
-import { FaMicrophone, FaSignOutAlt, FaPaperPlane } from 'react-icons/fa'; // Added Send icon
+import { FaMicrophone, FaSignOutAlt } from 'react-icons/fa';
 import { FiMenu } from 'react-icons/fi'; // Added Menu icon for toggle
 import { useAuth } from '../contexts/AuthContext';
 import { DotLottiePlayer } from '@dotlottie/react-player';
@@ -35,11 +35,11 @@ const AMPLITUDE_THRESHOLD = 0.01;
 const SILENCE_DURATION = 1000;
 
 const ChatContainer: React.FC<ChatContainerProps> = ({ mode, toggleMode, chatHistory, isLoading, sendMessage, isAuthLoading = false }) => {
-  const { logout, isAuthenticated } = useAuth();
+  const { logout, isAuthenticated, authorizeCalendar } = useAuth();
   const [input, setInput] = useState('');
   const [localChatHistory, setLocalChatHistory] = useState<Message[]>(chatHistory);
-  const [isRecording, setIsRecording] = useState(false); // Used in className
-  const [isListening, setIsListening] = useState(false); // Used in className and sendAudioToServer
+  const [, setIsRecording] = useState(false); // Used in className
+  const [, setIsListening] = useState(false); // Used in className and sendAudioToServer
   const [showIntegration, setShowIntegration] = useState(false);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
   const [hoveredEventLink, setHoveredEventLink] = useState<string | null>(null);
@@ -318,8 +318,6 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ mode, toggleMode, chatHis
       return tmp;
     }, new Float32Array());
 
-    const sampleRate = audioContext.sampleRate || 44100;
-    
     // Create WAV file with proper format for Whisper
     WavEncoder.encode({
       sampleRate: 16000,  // Force 16kHz sample rate
@@ -450,33 +448,6 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ mode, toggleMode, chatHis
     streamRef.current?.getTracks().forEach(track => track.stop()); streamRef.current = null;
   };
 
-  const handleIntegrationClick = async () => {
-    try {
-      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
-      const response = await fetch('/api/auth/google', { method: 'GET', credentials: 'include' });
-      if (!response.ok) throw new Error('Failed to start auth');
-      const data = await response.json();
-      if (data.authUrl) {
-        const width = 500, height = 600;
-        const left = window.screenX + (window.outerWidth - width) / 2;
-        const top = window.screenY + (window.outerHeight - height) / 2;
-        const popup = window.open(data.authUrl, 'Google Sign In', `width=${width},height=${height},left=${left},top=${top},toolbar=0,location=0,menubar=0,status=0`);
-        if (popup) {
-          const checkPopup = setInterval(async () => {
-            if (popup.closed) {
-              clearInterval(checkPopup);
-              await new Promise(resolve => setTimeout(resolve, 1500));
-              checkAuthStatus();
-            }
-          }, 500);
-        } else { throw new Error('Failed to open popup'); }
-      }
-    } catch (err) {
-      const error = err as Error;
-      console.error('Error during Google integration:', error);
-      setLocalChatHistory(prev => [...prev, { role: 'assistant', content: `Integration error: ${error.message}`, timestamp: new Date().toISOString() }]);
-    }
-  };
 
   const handleClearHistory = async () => {
     try {
@@ -583,9 +554,9 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ mode, toggleMode, chatHis
             transition={{ duration: 0.2 }}
             className="integration-container"
           >
-            <button onClick={handleIntegrationClick}>Integrate Calendar</button>
-            <button onClick={handleClearHistory}>Clear Chat History</button>
-            <button onClick={handleLogout} className="logout-button">
+            <button onClick={authorizeCalendar} className="integration-button">Integrate Calendar</button>
+            <button onClick={handleClearHistory} className="integration-button">Clear Chat History</button>
+            <button onClick={handleLogout} className="integration-button logout-button">
               <FaSignOutAlt className="inline-block mr-2" />
               Logout
             </button>
@@ -661,7 +632,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ mode, toggleMode, chatHis
                 className="send-button"
                 aria-label="Send message"
               >
-                <FaPaperPlane />
+                <img src="/sendbutton.png" alt="Send" className="send-icon" />
               </motion.button>
             </div>
           </motion.form>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ChatContainer from './components/ChatContainer';
-import LoginPage from './components/LoginPage'; // Import the new LoginPage
+import LoginPage from './components/LoginPage';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './App.css';
 
@@ -11,7 +11,7 @@ interface Message {
 }
 
 function AppContent() {
-  const { user, login, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
   const [mode, setMode] = useState('chat');
   const [chatHistory, setChatHistory] = useState<Message[]>([]);
   const [isLoadingChat, setIsLoadingChat] = useState(false);
@@ -43,7 +43,6 @@ function AppContent() {
 
       if (!response.ok) {
         if (response.status === 401) {
-          // Handle authentication error
           window.location.href = '/';
           return;
         }
@@ -73,7 +72,6 @@ function AppContent() {
           headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
-            'X-User-ID': user.id
           }
         });
         if (!response.ok) throw new Error('Failed to fetch chat history');
@@ -87,43 +85,13 @@ function AppContent() {
     fetchChatHistory();
   }, [user]);
 
-  // Check for Google OAuth callback
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
     const error = urlParams.get('error');
 
     if (error) {
       setAuthError('Google authentication failed. Please try again.');
-      // Remove error from URL
       window.history.replaceState({}, document.title, window.location.pathname);
-      return;
-    }
-
-    if (code) {
-      // Handle the OAuth callback
-      fetch('/api/auth/google/callback' + window.location.search, {
-        credentials: 'include',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        }
-      })
-        .then(async response => {
-          if (!response.ok) {
-            const text = await response.text();
-            throw new Error(text || 'Authentication failed');
-          }
-          return response.text();
-        })
-        .then(() => {
-          // Redirect back to the main page
-          window.location.href = '/';
-        })
-        .catch(error => {
-          console.error('Error handling OAuth callback:', error);
-          setAuthError(error.message || 'Authentication failed. Please try again.');
-        });
     }
   }, []);
 
@@ -136,12 +104,7 @@ function AppContent() {
   }
 
   if (!user) {
-    return (
-      <LoginPage 
-        onLogin={(userId, isGuest, name) => login(userId, isGuest, name)} 
-        error={authError}
-      />
-    );
+    return <LoginPage error={authError} />;
   }
 
   return (
